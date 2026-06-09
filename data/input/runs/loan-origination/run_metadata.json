@@ -1,0 +1,107 @@
+{
+  "generator_version": "1.2.0",
+  "generated_at": "2026-05-28T08:33:25.015247",
+  "generation_duration_seconds": 0.6,
+  "seed": 42,
+  "process_name": "Loan Origination",
+  "num_cases": 2500,
+  "num_events": 22336,
+  "start_date": "2025-01-01",
+  "end_date": "2025-06-30",
+  "timezone": "America/New_York",
+  "columns": [
+    {
+      "name": "case:concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "time:timestamp",
+      "type": "datetime",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "org:resource",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "lifecycle:transition",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "case:applicant_segment",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:channel",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:loan_amount_band",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:loan_purpose",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:region",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "cost:amount",
+      "type": "float",
+      "scope": "event_custom"
+    }
+  ],
+  "statistics": {
+    "mean_cycle_time_hours": 613.96,
+    "median_cycle_time_hours": 528.0,
+    "min_cycle_time_hours": 4.95,
+    "max_cycle_time_hours": 2975.0,
+    "std_cycle_time_hours": 358.49,
+    "mean_events_per_case": 8.93
+  },
+  "activity_distribution": {
+    "Underwriting": 3131,
+    "Application Submitted": 2500,
+    "Credit Check": 2500,
+    "Document Collection": 2339,
+    "Initial Review": 2339,
+    "Property Appraisal": 1845,
+    "Conditional Approval": 1715,
+    "Clear to Close": 1715,
+    "Loan Funded": 1715,
+    "Request Additional Documents": 960,
+    "Documents Received": 792,
+    "Declined": 617,
+    "Withdrawn": 168
+  },
+  "resource_utilization": {
+    "Sofia Romano": 1895,
+    "Rachel Greene": 1517,
+    "Priya Nair": 1403,
+    "Marcus Bell": 1380,
+    "Lena Kowalski": 1278,
+    "Hiroshi Tanaka": 1069,
+    "Daniel Osei": 982,
+    "Aisha Khan": 697,
+    "Tom Fletcher": 594,
+    "Diego Morales": 554
+  },
+  "git_commit": "dd3f42e",
+  "cli_command": "tools/processlog/src/processlog/__main__.py generate -c data/input/loan-origination.config.yaml -n 2500 -f all -o data/input/runs/loan-origination",
+  "config_file": "data/input/loan-origination.config.yaml"
+}

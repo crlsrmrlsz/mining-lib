@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["tests/**/*.ts", "vite.config.ts", "vitest.config.ts"],
+  "// exclude": "tests/consumer imports the built 'mining-lib' package (dist/types); it is type-checked separately by tsconfig.consumer.json after a build, not by the source typecheck.",
+  "exclude": ["tests/consumer/**"]
+}

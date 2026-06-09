@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mining-lib — phase 3 render (dev)</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 0 0 1rem;
+        color: #555;
+      }
+      #mount {
+        display: flex;
+        min-height: 820px;
+        min-width: 1600px;
+      }
+      #mount mining-lib-diagram {
+        flex: 1 1 auto;
+        border: 1px solid #ddd;
+      }
+      .controls {
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #555;
+      }
+      .controls select,
+      .controls button {
+        margin-left: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.9rem;
+        border: 1px solid #ddd;
+        background: #fff;
+        color: inherit;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .controls button:hover {
+        background: #f5f5f5;
+      }
+      .hint {
+        font-size: 0.85rem;
+        color: #666;
+        margin: 0 0 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>mining-lib · dev server · n5 fixture rendered via ESM source import</h1>
+    <p class="hint">
+      Drag to pan · wheel or +/− to zoom · 0 or double-click to reset.
+      Click the diagram or Tab to it first for keyboard shortcuts.
+      Click and drag a node to move it; positions persist while the log is loaded.
+      Drag an edge's bend handle to reshape its route; bends persist alongside node positions.
+    </p>
+    <div class="controls">
+      <label for="count-mode">Count mode:</label>
+      <select id="count-mode">
+        <option value="absolute">Absolute frequency</option>
+        <option value="case">Case frequency</option>
+        <option value="maxRepetitions">Max repetitions</option>
+        <option value="meanRepetitions">Mean repetitions</option>
+      </select>
+      <button type="button" id="dark-toggle">Toggle dark mode</button>
+    </div>
+    <div id="mount"></div>
+    <script type="module">
+      import { buildDfg, createDiagram, parseCsv } from "mining-lib";
+
+      const handle = createDiagram("#mount", {});
+      window.__diagram = handle;
+
+      const response = await fetch("/runs/n5-fixture/events.csv");
+      const text = await response.text();
+      const { log } = parseCsv(text);
+      const dfg = buildDfg(log);
+      handle.render(dfg);
+
+      document.getElementById("count-mode").addEventListener("change", (event) => {
+        handle.setCountMode(event.target.value);
+      });
+
+      document.getElementById("dark-toggle").addEventListener("click", () => {
+        const t = handle.getTheme();
+        handle.setTheme({ dark: !t.dark });
+        document.body.style.background = t.dark ? "" : "#000";
+        document.body.style.color = t.dark ? "" : "#fafafa";
+      });
+    </script>
+  </body>
+</html>

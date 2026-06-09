@@ -1,0 +1,231 @@
+<!doctype html>
+<!--
+  Showcase host: team-wiki. A Notion / Confluence-style wiki page —
+  warm-paper background, serif body type, a callout block, and the
+  diagram embedded inline between paragraphs of prose.
+  preset="paper" picks up the warm palette + serif font; the host's
+  own serif and paper bg meet the embed's, so the test is whether
+  they coexist *without* the host's font leaking into the shadow
+  root or vice versa.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Operations wiki · Loan origination</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --paper-bg: #f6efe2;
+        --paper-surface: #fdf8eb;
+        --paper-ink: #2b2a26;
+        --paper-muted: #6b5e4d;
+        --paper-rule: #d8ccb6;
+        --paper-accent: #b8533a;
+        --paper-callout: #fff5dd;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--paper-bg);
+        color: var(--paper-ink);
+        font-family:
+          "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        font-size: 17px;
+        line-height: 1.65;
+      }
+      header.wiki-bar {
+        background: var(--paper-surface);
+        border-bottom: 1px solid var(--paper-rule);
+        padding: 12px 28px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 13px;
+        color: var(--paper-muted);
+        font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+      }
+      header.wiki-bar .crumb {
+        color: var(--paper-ink);
+      }
+      header.wiki-bar .right {
+        margin-left: auto;
+      }
+      article {
+        max-width: 720px;
+        margin: 56px auto 80px;
+        padding: 0 32px;
+      }
+      article h1 {
+        font-size: 38px;
+        line-height: 1.15;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 8px;
+      }
+      article .byline {
+        color: var(--paper-muted);
+        font-style: italic;
+        margin-bottom: 28px;
+      }
+      article p {
+        margin-bottom: 18px;
+      }
+      article .callout {
+        background: var(--paper-callout);
+        border-left: 3px solid var(--paper-accent);
+        border-radius: 4px;
+        padding: 14px 18px;
+        margin: 22px 0;
+        font-size: 15.5px;
+      }
+      article .callout strong {
+        font-weight: 600;
+      }
+      .embed-block {
+        margin: 32px 0;
+        background: var(--paper-surface);
+        border: 1px solid var(--paper-rule);
+        border-radius: 6px;
+        padding: 14px;
+      }
+      .embed-block .label {
+        font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+        font-size: 12px;
+        color: var(--paper-muted);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .embed-frame {
+        height: 380px;
+      }
+      .embed-frame mining-lib-diagram {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .demo-footer {
+        margin-top: 36px;
+        padding: 16px 0;
+        border-top: 1px solid var(--paper-rule);
+        color: var(--paper-muted);
+        font-size: 13.5px;
+        font-style: italic;
+      }
+      article .demo-footer strong {
+        color: var(--paper-ink);
+        font-style: normal;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="wiki-bar">
+      <span>operations</span>
+      <span>/</span>
+      <span>processes</span>
+      <span>/</span>
+      <span class="crumb">loan-origination</span>
+      <span class="right">edited 2 days ago</span>
+    </header>
+    <article>
+      <h1>Loan origination — end-to-end</h1>
+      <p class="byline">Last reviewed by Mara · 1 200 words · 6 min read</p>
+      <p>
+        Operations rolled out the redesigned loan-origination flow at
+        the start of 2025. The diagram below is a directly-follows
+        graph derived from the first six months of cases — every node
+        is an activity in the funnel, every edge a transition between
+        activities, and the thickness of each edge tracks how often
+        that transition occurred.
+      </p>
+      <div class="callout">
+        <strong>The happy path.</strong>
+        <em>Application Submitted → Credit Check → Document Collection
+        → Initial Review → Property Appraisal → Conditional Approval
+        → Clear to Close → Loan Funded.</em> Roughly half of cases take
+        it straight through; the rest deviate.
+      </div>
+      <p>
+        The interesting structure lives in the underwriting loop. When
+        Underwriting requests additional documents, the case re-enters
+        the funnel at <em>Documents Received</em> and is
+        re-underwritten — sometimes more than once. That loop is where
+        most cycle-time accumulates, and is the team's current
+        improvement target.
+      </p>
+      <div class="embed-block">
+        <p class="label">Live diagram · loan origination (n = 2 500)</p>
+        <div class="embed-frame">
+          <mining-lib-diagram
+            id="diagram"
+            preset="paper"
+            controls="all"
+            rankdir="LR"
+          ></mining-lib-diagram>
+        </div>
+      </div>
+      <p>
+        This page opens with one Direct Funding case pre-traced — the
+        floating panel at top-right walks through every event for that
+        specific loan in chronological order, with the resource who
+        handled each step. Hover any row to highlight the matching
+        node in the diagram; pick another case from the ▾ Case picker
+        to swap.
+      </p>
+      <p>
+        To see the underwriting loop light up, toggle the ▾ Mode pill
+        to Mean (time): bottleneck edges interpolate to amber, and
+        terminal nodes — <em>Funded</em>, <em>Declined</em>,
+        <em>Withdrawn</em> — show the average total time a case spent
+        in the funnel before reaching that outcome.
+      </p>
+      <p class="demo-footer">
+        <strong>About this demo.</strong> Notion-style serif wiki host.
+        The embed runs <code>preset="paper"</code> — terracotta accent,
+        warm off-white surfaces, serif chrome inside the diagram.
+        The host page sets its own serif font on <code>body</code>;
+        the diagram's typography is determined by the preset's own
+        font stack, not the host's.
+        <br /><br />
+        <em>Curated state:</em> one Direct Funding case is pre-traced;
+        the floating panel at top-right walks through its events.
+      </p>
+    </article>
+    <script type="module">
+      import { buildDfg, getVariants, parseCsv } from "mining-lib";
+
+      const response = await fetch("/runs/loan-origination/events.csv");
+      const text = await response.text();
+      const { log } = parseCsv(text);
+      const dfg = buildDfg(log);
+      const el = document.getElementById("diagram");
+      el.log = log;
+      el.dfg = dfg;
+      // Phase 36 curation: pre-trace the first Direct Funding case so
+      // the Trace panel renders on load. Picked at runtime so the page
+      // stays robust across fixture regenerations with the same seed.
+      const happyPath = getVariants(log)[0]?.sequence ?? null;
+      if (happyPath) {
+        for (const [id, c] of log.cases) {
+          if (
+            c.events.length === happyPath.length &&
+            c.events.every((e, i) => e.activity === happyPath[i])
+          ) {
+            el.handle.setTraceCase(id);
+            break;
+          }
+        }
+      }
+      window.__diagram = el.handle;
+      window.__el = el;
+    </script>
+  </body>
+</html>

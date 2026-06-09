@@ -1,0 +1,92 @@
+{
+  "name": "mining-lib",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Embeddable browser-only library for interactive Directly-Follows Graphs from event logs.",
+  "license": "MIT",
+  "author": "Carlos",
+  "keywords": [
+    "process-mining",
+    "directly-follows-graph",
+    "dfg",
+    "event-log",
+    "process-flow",
+    "d3",
+    "dagre",
+    "web-component",
+    "svg",
+    "browser",
+    "no-backend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crlsrmrlsz/mining-lib.git"
+  },
+  "homepage": "https://crlsrmrlsz.github.io/mining-lib/",
+  "bugs": {
+    "url": "https://github.com/crlsrmrlsz/mining-lib/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": [
+    "./dist/mining-lib.js",
+    "./dist/mining-lib.umd.js"
+  ],
+  "module": "./dist/mining-lib.js",
+  "types": "./dist/types/src/index.d.ts",
+  "unpkg": "./dist/mining-lib.umd.js",
+  "jsdelivr": "./dist/mining-lib.umd.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/mining-lib.js"
+    }
+  },
+  "files": [
+    "dist/mining-lib.js",
+    "dist/mining-lib.umd.js",
+    "dist/types",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:demo": "pnpm build && node scripts/build-demo.mjs",
+    "preview": "vite preview",
+    "test": "pnpm test:unit && pnpm test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "pnpm build && playwright test",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "lint": "biome check --error-on-warnings ."
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@biomejs/biome": "^2.4.12",
+    "@playwright/test": "^1.59.1",
+    "@types/d3-drag": "^3.0.7",
+    "@types/d3-dsv": "^3.0.7",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-selection": "^3.0.11",
+    "@types/d3-zoom": "^3.0.8",
+    "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.1.7",
+    "fast-check": "^4.8.0",
+    "jsdom": "^29.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.9",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.1.5"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
+    "d3-drag": "^3.0.0",
+    "d3-dsv": "^3.0.1",
+    "d3-scale": "^4.0.2",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0"
+  }
+}

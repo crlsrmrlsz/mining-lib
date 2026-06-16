@@ -1,0 +1,1597 @@
+:host {
+  /* ----- Phase 28 design tokens (2026-05-22) -----
+     A small ladder of structural tokens that every chrome rule
+     references. Embedders override any of these via CSS to
+     customize the surface without grepping for raw values.
+     Documented in specs/design-tokens.md. */
+
+  /* Font sizes — 4-level ladder covering the existing 10/11/12/14
+     range observed in the audit. `--mining-fs-base` = the existing
+     `--mining-font-size` (kept as alias for back-compat with rules
+     that still reference it). */
+  --mining-fs-xs: 10px;
+  --mining-fs-sm: 11px;
+  --mining-fs-base: 12px;
+  --mining-fs-lg: 14px;
+  --mining-font-size: var(--mining-fs-base);
+
+  /* Spacing scale — 2-step ladder (0/2/4/8/12/16/24) covering >95 %
+     of existing raw px usage for padding, gap, margin, offsets. */
+  --mining-space-0: 0;
+  --mining-space-1: 2px;
+  --mining-space-2: 4px;
+  --mining-space-3: 8px;
+  --mining-space-4: 12px;
+  --mining-space-5: 16px;
+  --mining-space-6: 24px;
+
+  /* Radius — `--mining-radius` is the existing outer-pill / panel
+     radius. `--mining-radius-sm` formalises the
+     `calc(var(--mining-radius) - 1px)` pattern used by inner inputs
+     and chips. */
+  --mining-radius: 4px;
+  --mining-radius-sm: 3px;
+
+  /* Font weights — three levels cover the chrome's needs.
+     `--mining-fw-regular` is the implicit body weight; the other
+     two replace ad-hoc `font-weight: 500` / `600` strings. */
+  --mining-fw-regular: 400;
+  --mining-fw-medium: 500;
+  --mining-fw-bold: 600;
+
+  /* Shadows — two levels. `--mining-pill-shadow` for default chrome
+     surfaces. `--mining-shadow-overlay` for floating surfaces that
+     need to stand off the canvas (popovers, trace panel). */
+  --mining-pill-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --mining-shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* Outer breathing margin between chrome surfaces and the host edge. */
+  --mining-chrome-margin: var(--mining-space-4);
+
+  /* ----- Pre-Phase-28 tokens (unchanged) ----- */
+  --mining-node-fill: #f8fafc;
+  --mining-node-stroke: #e4e4e7;
+  --mining-node-text: #18181b;
+  --mining-node-muted-text: #71717a;
+  --mining-edge-stroke: #d4d4d8;
+  --mining-edge-label-text: #71717a;
+  /* Phase 19 rename: `--mining-chip-*` → `--mining-edge-label-*`
+     because the tokens only style edge-label chips on SVG edges,
+     not popover/UI chips. The one-phase fallback alias was dropped
+     in Phase 20 — embedders setting the old names get no effect. */
+  --mining-edge-label-fill: #f8fafc;
+  --mining-edge-label-stroke: #e4e4e7;
+  --mining-bg: transparent;
+  --mining-fit-padding: var(--mining-space-5);
+  --mining-font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mining-accent: #0070f3;
+  --mining-accent-fg: #ffffff;
+  --mining-grid-dot: #e4e4e7;
+  --mining-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --mining-time-ramp-low: #94a3b8;
+  --mining-time-ramp-high: #d97706;
+
+  /* Overlay + happy-path tokens (Phase 24/27). Declared here so the
+     "override via CSS, no JS" path works; values match `theme.ts`
+     LIGHT_DEFAULTS so the CSS and JS defaults agree (Phase 38-II B5). */
+  --mining-overlay-fade-opacity: 0.5;
+  --mining-happy-stroke: #16a34a;
+  --mining-happy-node-fill: #f0fdf4;
+
+  /* Phase 28 chrome grid layout. Three rows: top chrome bar, SVG
+     cell, bottom chrome bar. Surfaces in different rows can never
+     overlap each other; surfaces inside a row use flex-wrap so they
+     reflow gracefully at narrow widths. The trace panel anchors to
+     `.mining-lib-svg-cell` (which is `position: relative`) so it
+     overlays the SVG without escaping into the chrome rows.
+
+     `!important` defeats light-DOM `mining-lib-diagram { display:
+     block }` rules (used by the showcase pages) — those rules win
+     normal specificity against `:host`, but the chrome layout
+     depends on `display: grid`. */
+  /* biome-ignore lint/complexity/noImportantStyles: deliberate — the :host grid must defeat light-DOM `mining-lib-diagram { display: block }` rules (see rationale above) */
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  /* Guard against host-page inheritance across the shadow boundary:
+     `line-height` (and a handful of other props) inherit into the shadow
+     root, so a host `body { line-height: 2.4 }` would stretch every pill
+     (Phase 38-II B4). */
+  line-height: 1.4;
+}
+
+/* Shadow-scoped box-sizing reset — `*` only matches the shadow tree (this
+   sheet is adopted into the shadow root), never the host page. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   §2. Grid layout + chrome bars
+   ============================================================ */
+
+/* Chrome rows — flex containers that hold the pill wrappers. */
+.mining-lib-chrome-top-bar {
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--mining-space-3);
+  padding: var(--mining-chrome-margin) var(--mining-chrome-margin) 0;
+  min-width: 0;
+}
+
+.mining-lib-svg-cell {
+  grid-row: 2;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mining-lib-chrome-bottom-bar {
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: space-between;
+  gap: var(--mining-space-3);
+  padding: 0 var(--mining-chrome-margin) var(--mining-chrome-margin);
+  min-width: 0;
+}
+
+/* Override the `.mining-lib-pill` base's `position: absolute` for
+   chrome surfaces that now live inside the grid's flex bars — they
+   flow with the bar's layout instead of pinning to the host's corners. */
+.mining-lib-chrome-top-bar > .mining-lib-pill-primary,
+.mining-lib-chrome-bottom-bar > .mining-lib-pill {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
+/* ============================================================
+   §3. Pills (Mode / Variants / Filters / Utilities / Zoom)
+   ============================================================ */
+
+/* biome-ignore lint/style/noDescendingSpecificity: deliberate — the chrome-bar override block above (higher specificity) intentionally precedes this base rule */
+.mining-lib-pill {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mining-space-1);
+  padding: var(--mining-space-2);
+  border-radius: var(--mining-radius);
+  background: color-mix(in srgb, var(--mining-node-fill) 92%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--mining-pill-shadow);
+  border: 1px solid var(--mining-node-stroke);
+  font-family: var(--mining-font-family);
+  font-size: var(--mining-fs-base);
+  color: var(--mining-node-text);
+  z-index: 1;
+}
+
+/* Phase 22b — primary "pill" is a layout-only wrapper that holds
+   three independent floating pills (Mode + Variants + Filters).
+   No chrome of its own (no background, border, shadow, padding);
+   just positioning + flex layout for the trio. The inner pills
+   inherit `.mining-lib-pill` chrome. */
+/* Phase 28: primary is now a flex child of `.mining-lib-chrome-top-bar`
+   (its absolute positioning + max-width/transform are overridden by
+   the chrome-top-bar override block above). Keeps its own inner flex
+   layout for the Mode/Variants/Filters trio. */
+/* biome-ignore lint/style/noDescendingSpecificity: deliberate — like `.mining-lib-pill`, the chrome-top-bar override (higher specificity) intentionally precedes this base rule */
+.mining-lib-pill-primary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--mining-space-3);
+  z-index: 1;
+}
+
+/* Inner pills override `.mining-lib-pill`'s `position: absolute` so
+   they sit naturally inside the flex wrapper. Each gets a fixed
+   width so count-suffix labels (`· 3/8`, `· 2`) don't shift the
+   horizontal layout when state changes. */
+/* All primary pills follow the same sizing logic — width fits the
+   button's natural content. Mode (icon-only) stays compact; the
+   text triggers grow with their label + count suffix. Min-width
+   ensures the visual envelope still reads as a chip even at the
+   shortest labels. Layout shifts as suffixes appear/change, but
+   pills share the same rule so the chrome looks uniform. */
+.mining-lib-pill-mode-narrow,
+.mining-lib-pill-variants,
+.mining-lib-pill-filters {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  justify-content: center;
+  width: max-content;
+  min-width: 0;
+}
+
+/* Phase 28: utilities + zoom are now flex children of
+   `.mining-lib-chrome-bottom-bar`. The bar's `justify-content:
+   space-between` keeps zoom on the left + utilities on the right;
+   `flex-wrap: wrap-reverse` makes them stack vertically (utilities
+   above zoom) when the bar is too narrow to fit both side-by-side. */
+
+/* Padding ladder (Phase 19) — two steps applied uniformly:
+   - Interactive controls (buttons, chips, tabs, action items): 4 × 8.
+   - Content blocks (popover content, panel bodies): 8.
+   The base step here is the interactive one; content overrides
+   live on the rules that introduce those classes. (The third
+   "muted placeholders" step was tied to the retired rail surface
+   and is gone with it.) */
+.mining-lib-pill-btn,
+.mining-lib-pill-chip {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: var(--mining-space-2) var(--mining-space-3);
+  border-radius: var(--mining-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  line-height: 1;
+  /* Pill buttons never wrap their own text — `▾ Variants` would
+     otherwise break at the space at narrow boundaries (e.g. 500 px),
+     doubling the pill's height. Excalidraw enforces the same: every
+     toolbar button has a fixed pitch (`flex-shrink: 0`). */
+  white-space: nowrap;
+}
+
+.mining-lib-pill-btn:hover:not([disabled]),
+.mining-lib-pill-chip:hover:not([disabled]) {
+  background: var(--mining-node-stroke);
+}
+
+/* Vercel-style chip — borderless, transparent, accent underline on
+   active (rule below). Filled-accent chips lived too heavily next
+   to the underline-active tab strip; aligning the two gives the
+   chrome one repeating motif (text + accent underline = active
+   everywhere). The Mode pill's `Σ`/`clock` icons keep their
+   filled-accent treatment via `.mining-lib-mode-icon` — they're
+   the always-visible state indicator and need a stronger glyph. */
+.mining-lib-pill-chip {
+  color: var(--mining-node-muted-text);
+  border-radius: 0;
+  border-bottom: 1px solid transparent;
+}
+
+.mining-lib-pill-btn[disabled],
+.mining-lib-pill-chip[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Lucide-style line icons inside chrome buttons. The button's
+   text colour flows through the SVG via `stroke="currentColor"`,
+   so theme tokens drive icon colour without extra wiring. */
+.mining-lib-pill-btn svg,
+.mining-lib-pill-chip svg {
+  display: block;
+  pointer-events: none;
+}
+
+.mining-lib-pill-zoom-label {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mining-mono);
+  min-width: 48px;
+  text-align: center;
+}
+
+.mining-lib-mode-icon {
+  font-family: var(--mining-mono);
+  font-weight: var(--mining-fw-bold);
+  min-width: 26px;
+  text-align: center;
+  font-size: var(--mining-fs-lg);
+}
+
+.mining-lib-mode-icon[aria-pressed="true"] {
+  background: var(--mining-accent);
+  color: var(--mining-accent-fg);
+}
+
+/* Active-state mixin for chip-style triggers (Mode popover chips,
+   variant tick rows). The `:not(.mining-lib-mode-icon)` lock keeps
+   the narrow Mode trigger icon styling (filled accent) separate
+   from the underline-active chip styling everywhere else. */
+.mining-lib-pill-chip:not(.mining-lib-mode-icon)[aria-pressed="true"] {
+  color: var(--mining-node-text);
+  font-weight: var(--mining-fw-bold);
+  border-bottom-color: var(--mining-accent);
+}
+
+/* Phase 22 — count suffix span inside ▾ Variants / ▾ Filters triggers.
+   Renders `· 3/8` / `· 2` in a muted colour so the trigger reads as
+   "label · indicator" without crowding the label proper. */
+.mining-lib-trigger-count {
+  color: var(--mining-node-muted-text);
+  margin-left: var(--mining-space-1);
+}
+
+/* ============================================================
+   §4. Popovers (Mode / Variants / Filters / Case envelopes)
+   ============================================================ */
+
+/* Section layout inside the overflow menu popover (count / time
+   chip row). Segmented-text style: chips share a row with thin
+   vertical hairlines between them. Active chip is identified by
+   the accent underline (rule above), no background fill. */
+.mining-lib-popover-chips {
+  display: inline-flex;
+  flex-direction: row;
+  gap: var(--mining-space-0);
+  padding: var(--mining-space-0);
+  margin: var(--mining-space-0);
+}
+.mining-lib-popover-chips .mining-lib-pill-chip {
+  text-align: center;
+}
+.mining-lib-popover-chips .mining-lib-pill-chip + .mining-lib-pill-chip {
+  border-left: 1px solid var(--mining-node-stroke);
+}
+
+/* Phase 17 — Mode popover splits into Count + Time sub-sections.
+   The section title is a small uppercase label; sections stack
+   vertically and the chip row inside each is a single-row flex
+   strip (the existing .mining-lib-popover-chips class). */
+.mining-lib-mode-section + .mining-lib-mode-section {
+  margin-top: var(--mining-space-3);
+}
+.mining-lib-mode-section-title {
+  font-size: var(--mining-fs-xs);
+  font-weight: var(--mining-fw-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mining-node-muted-text);
+  padding: var(--mining-space-0) var(--mining-space-2);
+  margin-bottom: var(--mining-space-2);
+}
+.mining-lib-mode-section .mining-lib-popover-chips {
+  margin-bottom: var(--mining-space-0);
+}
+
+/* Phase 18 (revised) anchored the utilities pill at bottom-right
+   for every form factor (it used to live at top-right at desktop
+   pre-Phase-18). Narrow keeps the primary pill at top-center; zoom
+   stays bottom-left. */
+
+.mining-lib-popover {
+  position: absolute;
+  /* Phase 18 (revised): width fits content with a sensible cap.
+     The Mode popovers in particular are tiny — only 4 (count) or
+     2 (time) text labels — so a fixed 220 px shell wasted space.
+     Min-width keeps action / list popovers from collapsing too
+     narrowly to read. */
+  width: max-content;
+  min-width: 120px;
+  max-width: 320px;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--mining-node-fill) 96%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--mining-pill-shadow);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius);
+  /* Padding ladder step 2 — content blocks: 8. */
+  padding: var(--mining-space-3);
+  font-family: var(--mining-font-family);
+  font-size: var(--mining-fs-base);
+  color: var(--mining-node-text);
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+/* Phase 32 — SVG / PNG rows inside the export download popover.
+   Full-width clickable rows; same padding ladder + hover tint as the
+   pill buttons. */
+.mining-lib-export-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: var(--mining-space-2) var(--mining-space-3);
+  border-radius: var(--mining-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mining-lib-export-option:hover {
+  background: var(--mining-node-stroke);
+}
+
+/* ============================================================
+   §5. SVG render (nodes / edges / labels / bend handles /
+       overlay fade / happy-path emphasis / trace-target accents)
+   ============================================================ */
+
+.mining-lib-svg {
+  background:
+    radial-gradient(circle at 1px 1px, var(--mining-grid-dot) 1px, transparent 0) 0 0 / 18px 18px,
+    var(--mining-bg);
+  font-family: var(--mining-font-family);
+  cursor: grab;
+  touch-action: none;
+  text-rendering: optimizeLegibility;
+  /* Phase 28: physically bound the SVG to the SVG cell (which is
+     `position: relative`). Was `width/height: 100%` which let the
+     SVG's intrinsic viewBox aspect ratio interact with the grid
+     cell's `1fr` sizing, producing a feedback loop where each
+     refireFit grew the SVG by ~1 px. */
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  /* Diagram is for manipulation, not document-style text selection.
+     Kill the caret + drag-select on labels and the mobile tap flash. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Hide focus ring; we'll add a visual focus affordance later. */
+  outline: none;
+}
+
+.mining-lib-svg:focus {
+  outline: none;
+}
+.mining-lib-svg:focus-visible {
+  /* Restore a keyboard focus ring on the canvas (Phase 38-II B2). Inset so it
+     stays within the SVG bounds and reads against the content. */
+  outline: 2px solid var(--mining-accent);
+  outline-offset: -2px;
+}
+
+/* Keyboard focus rings for every chrome control (pills, chips, inputs,
+   selects, export/pin buttons). `:focus-visible` shows for keyboard nav, not
+   mouse clicks. */
+:host button:focus-visible,
+:host input:focus-visible,
+:host select:focus-visible {
+  outline: 2px solid var(--mining-accent);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .mining-lib-svg:focus-visible,
+  :host button:focus-visible,
+  :host input:focus-visible,
+  :host select:focus-visible {
+    outline-color: CanvasText;
+  }
+}
+
+.mining-lib-svg text {
+  /* Belt and braces: SVG <text> needs its own opt-out in some browsers
+     (Firefox honours user-select on <svg> only inconsistently for <text>). */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mining-lib-svg:active {
+  cursor: grabbing;
+}
+
+.mining-lib-node {
+  cursor: grab;
+}
+
+.mining-lib-node:active {
+  cursor: grabbing;
+}
+
+.mining-lib-node rect {
+  fill: var(--mining-node-fill);
+  stroke: var(--mining-node-stroke);
+  stroke-width: 1;
+}
+
+.mining-lib-node-label {
+  font-size: var(--mining-fs-base);
+  font-weight: var(--mining-fw-medium);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: var(--mining-node-text);
+  pointer-events: none;
+}
+
+.mining-lib-node-count {
+  font-size: var(--mining-fs-xs);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: var(--mining-node-muted-text);
+  pointer-events: none;
+}
+
+.mining-lib-node-terminal {
+  pointer-events: none;
+}
+
+.mining-lib-node-terminal-text {
+  font-size: var(--mining-fs-sm);
+  font-weight: var(--mining-fw-medium);
+  text-anchor: middle;
+  dominant-baseline: central;
+  fill: currentColor;
+}
+
+.mining-lib-edge {
+  fill: none;
+  stroke: var(--mining-edge-stroke);
+  color: var(--mining-edge-stroke);
+}
+
+.mining-lib-node.mining-lib-selected rect {
+  outline: 2px solid var(--mining-accent);
+  outline-offset: 2px;
+}
+
+.mining-lib-edge.mining-lib-selected {
+  stroke: var(--mining-accent);
+  filter: drop-shadow(0 0 2px var(--mining-accent));
+}
+
+.mining-lib-edge-label-chip {
+  fill: var(--mining-edge-label-fill);
+  stroke: var(--mining-edge-label-stroke);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.mining-lib-edge-label-text {
+  font-size: var(--mining-fs-xs);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: var(--mining-edge-label-text);
+  pointer-events: none;
+}
+
+.mining-lib-bend-handle {
+  fill: var(--mining-node-fill);
+  stroke: var(--mining-node-stroke);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.mining-lib-bend-handle-hit {
+  fill: transparent;
+  pointer-events: all;
+  cursor: grab;
+}
+
+.mining-lib-bend-handle-hit:active {
+  cursor: grabbing;
+}
+
+/* Phase 24 — happy-path fade overlay. One opacity rule cascades
+   to nodes, edge paths, and edge-label groups carrying the
+   `.mining-lib-faded` class. Embedders soften the fade by
+   overriding `--mining-overlay-fade-opacity` on the host. */
+.mining-lib-faded {
+  opacity: var(--mining-overlay-fade-opacity);
+}
+
+/* Phase 24 (Option C) — on-path emphasis. CSS rules with higher
+   specificity than the default `.mining-lib-edge` / `.mining-lib-node
+   rect` rules win the SVG cascade, so the green tokens land on the
+   pinned spine. Inline presentation attrs (used for the time-mode
+   amber) lose to ALL CSS rules per the SVG2 spec — so this CSS also
+   wins over the time-mode encoding, making the happy path the
+   primary visual signal whenever it's pinned. */
+.mining-lib-edge.mining-lib-happy {
+  stroke: var(--mining-happy-stroke);
+  color: var(--mining-happy-stroke);
+}
+
+.mining-lib-node.mining-lib-happy > rect {
+  fill: var(--mining-happy-node-fill);
+  stroke: var(--mining-happy-stroke);
+  stroke-width: 1.5;
+}
+
+/* DFG-side accent highlight applied by the createDiagram bridge
+   when a trace panel row is hovered (Phase 27 §8). */
+.mining-lib-trace-target-hover rect {
+  stroke: var(--mining-accent);
+  stroke-width: 2;
+}
+
+path.mining-lib-edge.mining-lib-trace-target-hover {
+  stroke: var(--mining-accent);
+  stroke-width: 3;
+}
+
+/* ============================================================
+   §6. Filter sections (Variants panel + Filters chips + Case
+       attribute / Date / Case sections — all popover-resident)
+   ============================================================ */
+
+.mining-lib-panel {
+  font-family: var(--mining-font-family);
+  font-size: var(--mining-fs-base);
+  color: var(--mining-node-text);
+  /* App-like panel: row text non-selectable; checkboxes and buttons
+     keep native interaction (they get user-select: auto below). */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mining-lib-panel input[type="checkbox"],
+.mining-lib-panel button {
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+/* Phase 24 polish — header + row share the same 3-column grid so the
+   "Happy path | Cases | %" labels sit directly above their columns.
+   Column 1 carries the pin button, column 2 carries the checkbox +
+   case-count pair, column 3 carries the percentage (right-aligned). */
+.mining-lib-panel-header,
+.mining-lib-panel-row {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) 1fr auto;
+  align-items: center;
+  column-gap: var(--mining-space-5);
+}
+
+.mining-lib-panel-header {
+  font-size: var(--mining-fs-xs);
+  color: var(--mining-node-muted-text);
+  font-weight: var(--mining-fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--mining-space-3) var(--mining-space-0);
+  margin-bottom: var(--mining-space-2);
+  border-bottom: 1px solid var(--mining-edge-stroke);
+  cursor: help;
+}
+
+.mining-lib-panel-header-happy {
+  justify-self: start;
+}
+
+.mining-lib-panel-header-pct,
+.mining-lib-panel-row-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* List-level actions row: All / None (check semantics) + Show all (N)
+   (visibility semantics). Sits BELOW the variant rows so the
+   3-column header sits directly above the list — one less divider
+   between labels and data. The Show all button right-aligns via
+   margin-left:auto when present. */
+.mining-lib-panel-bulk {
+  display: flex;
+  gap: var(--mining-space-4);
+  align-items: center;
+  margin-top: var(--mining-space-3);
+}
+
+.mining-lib-panel-bulk button {
+  background: none;
+  border: none;
+  padding: var(--mining-space-0);
+  cursor: pointer;
+  color: var(--mining-edge-label-text);
+  text-decoration: underline;
+  font: inherit;
+}
+
+.mining-lib-panel-row {
+  padding: var(--mining-space-2) var(--mining-space-0);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mining-lib-panel-row[hidden] {
+  display: none;
+}
+
+.mining-lib-panel-row-cases {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mining-space-3);
+}
+
+.mining-lib-panel-row-cases input[type="checkbox"] {
+  margin: var(--mining-space-0);
+  flex: 0 0 auto;
+}
+
+.mining-lib-panel-row-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.mining-lib-panel-show-all {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--mining-edge-label-text);
+  padding: var(--mining-space-0);
+  font: inherit;
+  text-decoration: underline;
+  /* Right-align inside the flex action-row regardless of order
+     of preceding buttons. Inert outside a flex context. */
+  margin-left: auto;
+}
+
+/* Phase 24 — per-variant pin button. Sits at the start of each
+   row, before the checkbox. Idle: muted text colour, outlined
+   target icon. Active (aria-pressed=true): accent colour, same
+   icon — the colour change is the affordance, no new glyph. */
+.mining-lib-variant-pin {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: var(--mining-space-2);
+  margin: var(--mining-space-0);
+  cursor: pointer;
+  color: var(--mining-node-muted-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* `justify-self: start` keeps the pin left-aligned inside its
+     grid cell so it stays vertically under the "Happy path" header.
+     Inert outside a grid context — kept here to avoid a
+     descendant-selector specificity bump. */
+  justify-self: start;
+  flex: 0 0 auto;
+  border-radius: var(--mining-radius);
+}
+
+.mining-lib-variant-pin:hover {
+  color: var(--mining-node-text);
+}
+
+.mining-lib-variant-pin[aria-pressed="true"] {
+  color: var(--mining-accent);
+}
+
+.mining-lib-variant-pin > svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* Subtle row tint on the pinned variant. Uses color-mix on the
+   accent so the highlight reads on both light and dark themes
+   without a hard background-colour override. */
+.mining-lib-panel-row.mining-lib-variant-row-pinned {
+  background: color-mix(in oklab, var(--mining-accent) 8%, transparent);
+  border-radius: var(--mining-radius);
+}
+
+/* ---------------------------------------------------------------
+   Phase 22 — split Variants panel + slim Filters panel.
+   Phase 24 polish — both panels are plain `<div>`s; the popover
+   trigger already names them ("▾ Variants" / "▾ Filters") so the
+   previous `<details><summary>` headings were redundant. Each panel
+   mounts directly into its own `.mining-lib-popover` envelope.
+   --------------------------------------------------------------- */
+
+.mining-lib-variants-panel,
+.mining-lib-filters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-3);
+}
+
+/* Keep the Filters popover at a stable width. The shared .mining-lib-popover
+   sizes to its content (`width: max-content`) so the tiny Mode popovers stay
+   snug — but that let the Filters menu resize whenever the Active-filter chip
+   row appeared or changed (a chip is wider/narrower than the value sections).
+   Pin the popover that hosts the Filters panel to a constant width so applying
+   a filter never shifts the menu — but cap it to the host so it still fits
+   narrow hosts. `100%` resolves against :host (the popover's positioned
+   containing block); the 2×margin matches createPopover's edge clamp so the
+   menu never spills off-screen. Scoped via :has() so Mode / Variants / Export
+   popovers keep their content-fit sizing. */
+.mining-lib-popover:has(.mining-lib-filters-panel) {
+  width: min(320px, 100% - 2 * var(--mining-chrome-margin));
+}
+
+/* Active row: chips + Clear all link side-by-side, right-aligned via
+   space-between. Hidden by `hidden=""` on the section when no
+   non-variant clauses are present. */
+.mining-lib-filters-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mining-space-2);
+}
+
+.mining-lib-clear-all {
+  font: inherit;
+  background: transparent;
+  border: none;
+  color: var(--mining-accent);
+  padding: var(--mining-space-0);
+  cursor: pointer;
+}
+
+.mining-lib-clear-all:hover {
+  text-decoration: underline;
+}
+
+.mining-lib-filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mining-space-2);
+}
+
+/* Removable filter chip — label + trailing × button. Background
+   tints subtly on hover; the × is the only removal target. */
+.mining-lib-filters-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mining-space-2);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  font: inherit;
+  color: inherit;
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius);
+  cursor: default;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.mining-lib-filters-chip:hover {
+  background: color-mix(in srgb, var(--mining-accent) 6%, var(--mining-node-fill));
+}
+
+.mining-lib-filters-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mining-lib-filters-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--mining-radius-sm);
+  color: var(--mining-node-muted-text);
+  cursor: pointer;
+  font-size: var(--mining-fs-lg);
+  line-height: 1;
+}
+
+.mining-lib-filters-chip-x:hover {
+  background: var(--mining-node-stroke);
+  color: var(--mining-node-text);
+}
+
+/* Phase 25 — chip max-width safety. Long attribute chip labels
+   (e.g. "Applicant type: existing_business +2") wrap awkwardly in
+   the Active chip row at narrow widths. Cap visual width and let
+   the label ellipsis to keep the row stable. Must follow the base
+   `.mining-lib-filters-chip` rule so the cap wins the cascade. */
+.mining-lib-filters-chip {
+  max-width: 220px;
+}
+
+.mining-lib-filters-chip .mining-lib-filters-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The existing variant panel mounts inside `.mining-lib-filters-variants-host`
+   (a child of `.mining-lib-variants-panel` since Phase 22), so its
+   existing styling keeps working. */
+.mining-lib-filters-variants-host {
+  display: block;
+}
+
+/* Phase 25 — Filters-panel case-attribute sections. One
+   collapsible <details> per filterable case:* attribute. Reuses
+   the Variants-section visual pattern (chevron summary, checkbox
+   rows) — no new theme tokens. */
+.mining-lib-attr-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-2);
+}
+
+.mining-lib-attr-section {
+  border-top: 1px solid var(--mining-node-stroke);
+}
+
+.mining-lib-attr-section > summary {
+  font-size: var(--mining-fs-base);
+  font-weight: var(--mining-fw-bold);
+  color: var(--mining-node-text);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mining-lib-attr-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-1);
+  padding: var(--mining-space-2) var(--mining-space-3);
+}
+
+.mining-lib-attr-row {
+  display: flex;
+  gap: var(--mining-space-3);
+  align-items: center;
+  padding: var(--mining-space-1) var(--mining-space-2);
+  cursor: pointer;
+  border-radius: var(--mining-radius-sm);
+}
+
+.mining-lib-attr-row:hover {
+  background: color-mix(in oklab, var(--mining-accent) 6%, transparent);
+}
+
+.mining-lib-attr-row input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin: var(--mining-space-0);
+}
+
+.mining-lib-attr-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mining-node-text);
+  font-size: var(--mining-fs-base);
+}
+
+.mining-lib-attr-count {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--mining-node-muted-text);
+  min-width: 28px;
+  text-align: right;
+  font-size: var(--mining-fs-base);
+}
+
+/* Phase 26 — date-range filter section. Lives inside the Filters
+   popover above the case-attribute sections (date is the coarsest
+   axis users reach for first). Three coupled sub-controls in one
+   <details>: preset chip row, anchor <select>, two date inputs,
+   histogram brush. No new theme tokens — reuses --mining-accent,
+   --mining-node-stroke, --mining-node-muted-text, --mining-radius. */
+
+.mining-lib-date-section {
+  border-top: 1px solid var(--mining-node-stroke);
+}
+
+.mining-lib-date-section > summary {
+  font-size: var(--mining-fs-base);
+  font-weight: var(--mining-fw-bold);
+  color: var(--mining-node-text);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mining-lib-date-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-3);
+}
+
+.mining-lib-date-anchor {
+  font: inherit;
+  color: var(--mining-node-text);
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius-sm);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  cursor: pointer;
+}
+
+.mining-lib-date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--mining-space-3);
+}
+
+.mining-lib-date-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-1);
+  min-width: 0;
+}
+
+.mining-lib-date-input {
+  font: inherit;
+  color: var(--mining-node-text);
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius-sm);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  min-width: 0;
+}
+
+.mining-lib-date-histogram {
+  display: block;
+  width: 100%;
+  height: 48px;
+  /* Histogram is wider than 220px on wider hosts — let the SVG fill
+     its column. The internal viewBox keeps the geometry scaled. */
+}
+
+.mining-lib-date-bar {
+  fill: var(--mining-node-muted-text);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.mining-lib-date-bar-dim {
+  opacity: 0.2;
+}
+
+.mining-lib-date-selection {
+  fill: var(--mining-accent);
+  opacity: 0.18;
+  cursor: grab;
+}
+
+.mining-lib-date-selection:active {
+  cursor: grabbing;
+}
+
+.mining-lib-date-handle {
+  stroke: var(--mining-accent);
+  stroke-width: 2;
+  cursor: ew-resize;
+}
+
+/* ============================================================
+   Phase 27 (2026-05-22 refold) — Case filter section + Trace panel
+   ============================================================ */
+
+/* --- Case filter section (lives inside the Filters popover; styled
+   to match the date-section so the two read as siblings). --- */
+
+.mining-lib-case-section {
+  border-top: 1px solid var(--mining-node-stroke);
+}
+
+.mining-lib-case-section > summary {
+  font-size: var(--mining-fs-base);
+  font-weight: var(--mining-fw-bold);
+  color: var(--mining-node-text);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mining-lib-case-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-3);
+}
+
+/* Phase 27 follow-up (2026-05-22b) — custom combobox: input +
+   chevron + popup. Replaces the previous native `<input list>` +
+   `<datalist>` so the dropdown affordance is consistent across
+   browsers (the native datalist's ▼ is subtle on Chrome and
+   absent on Firefox). */
+
+.mining-lib-case-combobox {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.mining-lib-case-input {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  font: inherit;
+  /* Right padding leaves room for the chevron button overlaid via
+     the flex sibling below. */
+  padding: var(--mining-space-2) var(--mining-space-3);
+  border: 1px solid var(--mining-node-stroke);
+  border-right: none;
+  border-top-left-radius: var(--mining-radius-sm);
+  border-bottom-left-radius: var(--mining-radius-sm);
+  background: var(--mining-node-fill);
+  color: var(--mining-node-text);
+  min-width: 0;
+}
+
+.mining-lib-case-input:focus {
+  outline: 2px solid var(--mining-accent);
+  outline-offset: -1px;
+  position: relative;
+  z-index: 1;
+}
+
+.mining-lib-case-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mining-lib-case-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mining-space-6);
+  font: inherit;
+  font-size: var(--mining-fs-xs);
+  color: var(--mining-node-muted-text);
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  /* Mirror the input's `border-right: none` on the other side so the
+     input + chevron read as one box — no seam between text and arrow,
+     matching the single-bordered native date `<select>`. */
+  border-left: none;
+  border-top-right-radius: var(--mining-radius-sm);
+  border-bottom-right-radius: var(--mining-radius-sm);
+  cursor: pointer;
+  padding: var(--mining-space-0);
+}
+
+.mining-lib-case-chevron:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--mining-accent) 6%, var(--mining-node-fill));
+  color: var(--mining-node-text);
+}
+
+.mining-lib-case-chevron:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mining-lib-case-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: var(--mining-space-1) var(--mining-space-0) var(--mining-space-0);
+  padding: var(--mining-space-1);
+  list-style: none;
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius-sm);
+  box-shadow: var(--mining-shadow-overlay);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.mining-lib-case-popup-item {
+  font: inherit;
+  font-size: var(--mining-fs-sm);
+  color: var(--mining-node-text);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  border-radius: var(--mining-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mining-lib-case-popup-item:hover {
+  background: color-mix(in srgb, var(--mining-accent) 10%, transparent);
+}
+
+.mining-lib-case-hint {
+  font-size: var(--mining-fs-xs);
+  color: var(--mining-node-muted-text);
+  padding: var(--mining-space-0) var(--mining-space-1);
+}
+
+.mining-lib-case-empty-msg {
+  color: var(--mining-node-muted-text);
+  font-size: var(--mining-fs-sm);
+  padding: var(--mining-space-3) var(--mining-space-1);
+}
+
+/* ============================================================
+   §7. Selection pill (floating, anchored to clicked node/edge)
+   ============================================================ */
+
+/* Phase 20 — Floating selection pill. Position is set inline by
+   `selectionPill.ts`; the rule reuses the existing `.mining-lib-pill`
+   base for visual continuity and only overrides the absolute
+   anchoring + z-order so it sits above the SVG but below popovers. */
+.mining-lib-pill-selection {
+  /* `.mining-lib-pill` already sets `position: absolute`. The pill
+     anchors via inline `top` / `left` written by the runtime — no
+     fixed corner-anchor here. */
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.mining-lib-pill-filter,
+.mining-lib-pill-close {
+  /* Inherit the existing `.mining-lib-pill-btn` base; only the
+     close button overrides the muted colour, and only the filter
+     button can ellipsis-truncate at narrow widths. */
+}
+
+.mining-lib-pill-filter {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.mining-lib-pill-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: var(--mining-space-1) var(--mining-space-3);
+  color: var(--mining-node-muted-text);
+}
+
+/* Phase 21 — Resource breakdown block inside the floating
+   selection pill (node selection on a log with resources).
+   Each row is a toggle button (2026-05-12 rework); active rows
+   highlight to show the `resourceAt` clause they contribute to. */
+.mining-lib-pill-selection {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mining-lib-pill-action-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mining-space-1);
+}
+
+.mining-lib-pill-separator {
+  height: 1px;
+  background: var(--mining-node-stroke);
+  margin: var(--mining-space-2) var(--mining-space-0);
+}
+
+.mining-lib-resource-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-2) var(--mining-space-3) var(--mining-space-3);
+  min-width: 220px;
+}
+
+.mining-lib-resource-header {
+  margin: var(--mining-space-0);
+  font-size: var(--mining-fs-base);
+  font-weight: var(--mining-fw-bold);
+  color: var(--mining-node-text);
+}
+
+.mining-lib-resource-bar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--mining-radius);
+  overflow: hidden;
+  background: var(--mining-node-stroke);
+  gap: var(--mining-space-0);
+}
+
+.mining-lib-resource-bar-segment {
+  display: block;
+  min-width: 1px;
+  height: 100%;
+}
+
+/* Neutral-to-accent ramp without introducing new theme tokens.
+   `color-mix` is widely supported in evergreen browsers; the
+   blends use the embedder-configurable `--mining-accent` and
+   `--mining-node-fill` so themes propagate. */
+.mining-lib-resource-bar-segment-0 {
+  background: color-mix(in oklab, var(--mining-accent) 80%, var(--mining-node-fill));
+}
+
+.mining-lib-resource-bar-segment-1 {
+  background: color-mix(in oklab, var(--mining-accent) 60%, var(--mining-node-fill));
+}
+
+.mining-lib-resource-bar-segment-2 {
+  background: color-mix(in oklab, var(--mining-accent) 45%, var(--mining-node-fill));
+}
+
+.mining-lib-resource-bar-segment-3 {
+  background: color-mix(in oklab, var(--mining-accent) 30%, var(--mining-node-fill));
+}
+
+.mining-lib-resource-bar-segment-4 {
+  background: color-mix(in oklab, var(--mining-accent) 18%, var(--mining-node-fill));
+}
+
+.mining-lib-resource-bar-segment-others {
+  background: color-mix(in oklab, var(--mining-node-stroke) 60%, var(--mining-node-fill));
+}
+
+/* `(unassigned)` is visually distinct at any colour so the
+   eye doesn't conflate "null events" with the lightest worker
+   in the ramp. */
+.mining-lib-resource-bar-segment-unassigned {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--mining-node-stroke),
+    var(--mining-node-stroke) 3px,
+    var(--mining-node-fill) 3px,
+    var(--mining-node-fill) 6px
+  );
+}
+
+.mining-lib-resource-list {
+  list-style: none;
+  padding: var(--mining-space-0);
+  margin: var(--mining-space-0);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-1);
+}
+
+.mining-lib-resource-row {
+  font-size: var(--mining-fs-base);
+}
+
+/* Both the static <div> and the interactive <button> wrappers share
+   the same internal layout. Targeting the row by descendant keeps
+   the selectors agnostic to whether `onToggle` was provided. */
+.mining-lib-resource-row > div,
+.mining-lib-resource-row > button {
+  display: flex;
+  align-items: center;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-1) var(--mining-space-2);
+  width: 100%;
+  border-radius: var(--mining-radius-sm);
+  border: 1px solid transparent;
+}
+
+.mining-lib-resource-row-btn {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mining-lib-resource-row-btn:hover {
+  background: color-mix(in oklab, var(--mining-accent) 8%, transparent);
+}
+
+.mining-lib-resource-row-active > .mining-lib-resource-row-btn {
+  background: color-mix(in oklab, var(--mining-accent) 14%, transparent);
+  border-color: color-mix(in oklab, var(--mining-accent) 40%, transparent);
+}
+
+.mining-lib-resource-row .resource-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mining-node-text);
+}
+
+.mining-lib-resource-row .resource-count,
+.mining-lib-resource-row .resource-pct {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--mining-node-muted-text);
+  min-width: 28px;
+  text-align: right;
+}
+
+.mining-lib-resource-others .resource-label {
+  font-style: italic;
+  color: var(--mining-node-muted-text);
+}
+
+/* Active bar segment: outline ring matching the row highlight so
+   the segment + row pair reads as one selected unit. */
+.mining-lib-resource-bar-segment-active {
+  outline: 1.5px solid var(--mining-accent);
+  outline-offset: -1.5px;
+}
+
+/* Phase 25 — selection-pill Attributes block. Mirrors the
+   Resources block's vertical rhythm; sub-section label is a small
+   uppercase eyebrow followed by the toggle column. */
+.mining-lib-pill-attrs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-2) var(--mining-space-3) var(--mining-space-3);
+  min-width: 220px;
+  border-top: 1px solid var(--mining-node-stroke);
+}
+
+.mining-lib-pill-attr-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-1);
+}
+
+.mining-lib-pill-attr-label {
+  font-size: var(--mining-fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mining-node-muted-text);
+  font-weight: var(--mining-fw-bold);
+}
+
+.mining-lib-pill-attr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-1) var(--mining-space-2);
+  width: 100%;
+  border-radius: var(--mining-radius-sm);
+  border: 1px solid transparent;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mining-lib-pill-attr-row:hover {
+  background: color-mix(in oklab, var(--mining-accent) 8%, transparent);
+}
+
+.mining-lib-pill-attr-row-active {
+  background: color-mix(in oklab, var(--mining-accent) 14%, transparent);
+  border-color: color-mix(in oklab, var(--mining-accent) 40%, transparent);
+}
+
+.mining-lib-pill-attr-value {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mining-node-text);
+}
+
+.mining-lib-pill-attr-count {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--mining-node-muted-text);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ============================================================
+   §8. Trace panel (anchored top-right of the SVG cell)
+   ============================================================ */
+
+/* Phase 28: the parent `.mining-lib-svg-cell` is `position: relative`,
+   so this panel anchors to it instead of `:host`. That confines the
+   panel to the SVG row — it can NEVER overlap the top chrome bar
+   (primary pill row) or the bottom chrome bar (utilities + zoom)
+   because they live in different grid rows. */
+
+.mining-lib-trace-panel {
+  position: absolute;
+  top: var(--mining-chrome-margin);
+  right: var(--mining-chrome-margin);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  /* Phase 28: clamp width to the SVG cell. `min(240px, ...)` lets
+     the panel shrink at narrow widths so it never escapes the host;
+     `max-width: 320px` caps it on wide hosts. The `100% - 2 * margin`
+     accounts for the chrome-margin offset on both sides. */
+  width: min(320px, 100% - 2 * var(--mining-chrome-margin));
+  min-width: 0;
+  max-height: calc(100% - 2 * var(--mining-chrome-margin));
+  background: var(--mining-node-fill);
+  border: 1px solid var(--mining-node-stroke);
+  border-radius: var(--mining-radius);
+  box-shadow: var(--mining-pill-shadow);
+  overflow: hidden;
+}
+
+.mining-lib-trace-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mining-space-2);
+  padding: var(--mining-space-3);
+  border-bottom: 1px solid var(--mining-node-stroke);
+}
+
+.mining-lib-trace-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: var(--mining-space-1) var(--mining-space-3);
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  color: var(--mining-node-muted-text);
+}
+
+.mining-lib-trace-close:hover {
+  color: inherit;
+}
+
+.mining-lib-trace-case-id {
+  /* Match the chrome's baseline font size (was 1.05em — looked
+     visibly larger than the pills + Filters popover sections). */
+  font-weight: var(--mining-fw-bold);
+  padding-right: 24px; /* leave room for the corner × */
+}
+
+.mining-lib-trace-meta {
+  color: var(--mining-node-muted-text);
+  font-size: var(--mining-fs-sm);
+}
+
+.mining-lib-trace-variant {
+  color: var(--mining-node-muted-text);
+  font-size: var(--mining-fs-xs);
+  /* Wraps so the full variant signature stays readable even on long
+     paths. The Trace panel's max-width caps the visible row count. */
+  word-break: break-word;
+}
+
+.mining-lib-trace-rows {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--mining-space-2) var(--mining-space-0);
+}
+
+.mining-lib-trace-row {
+  display: grid;
+  /* `minmax(0, 1fr)` on the activity column lets long names wrap
+     instead of forcing the grid to overflow the panel max-width. */
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: var(--mining-space-3);
+  padding: var(--mining-space-2) var(--mining-space-3);
+  font-size: var(--mining-fs-sm);
+  cursor: default;
+}
+
+.mining-lib-trace-row:hover,
+.mining-lib-trace-row.mining-lib-trace-row-hover {
+  background: color-mix(in srgb, var(--mining-accent) 12%, transparent);
+}
+
+.mining-lib-trace-bullet {
+  color: var(--mining-accent);
+}
+
+.mining-lib-trace-activity {
+  /* Long activity names (and `· resource` suffixes) wrap to as
+     many lines as needed; the row's grid track auto-expands. */
+  word-break: break-word;
+}
+
+.mining-lib-trace-timestamp {
+  color: var(--mining-node-muted-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mining-lib-trace-delta {
+  color: var(--mining-node-muted-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

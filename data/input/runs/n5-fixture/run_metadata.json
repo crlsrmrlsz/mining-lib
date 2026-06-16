@@ -1,0 +1,86 @@
+{
+  "generator_version": "1.1.0",
+  "generated_at": "2026-05-27T13:31:22.640182",
+  "generation_duration_seconds": 0.02,
+  "seed": 42,
+  "process_name": "Restaurant Permit Application",
+  "num_cases": 5,
+  "num_events": 36,
+  "start_date": "2024-01-01",
+  "end_date": "2024-06-30",
+  "timezone": "America/New_York",
+  "columns": [
+    {
+      "name": "case:concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "time:timestamp",
+      "type": "datetime",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "org:resource",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "lifecycle:transition",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "case:priority",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:applicant_type",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "cost:amount",
+      "type": "float",
+      "scope": "event_custom"
+    }
+  ],
+  "statistics": {
+    "mean_cycle_time_hours": 489.6,
+    "median_cycle_time_hours": 336.0,
+    "min_cycle_time_hours": 72.0,
+    "max_cycle_time_hours": 1320.0,
+    "std_cycle_time_hours": 480.18,
+    "mean_events_per_case": 7.2
+  },
+  "activity_distribution": {
+    "review_in_progress": 7,
+    "submitted": 5,
+    "intake_validation": 5,
+    "assigned_to_reviewer": 4,
+    "health_inspection": 4,
+    "approved": 3,
+    "request_additional_info": 3,
+    "applicant_provided_info": 3,
+    "rejected": 2
+  },
+  "resource_utilization": {
+    "clerk_002": 4,
+    "reviewer_001": 3,
+    "reviewer_004": 3,
+    "inspector_003": 2,
+    "reviewer_003": 1,
+    "inspector_001": 1,
+    "clerk_003": 1,
+    "inspector_002": 1
+  },
+  "git_commit": "560197c",
+  "cli_command": "tools/processlog/src/processlog/__main__.py generate -c data/input/process_config.yaml -n 5 -f all -o data/input/runs/n5-fixture",
+  "config_file": "data/input/process_config.yaml"
+}

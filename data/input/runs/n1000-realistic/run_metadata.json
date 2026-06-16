@@ -1,0 +1,89 @@
+{
+  "generator_version": "1.1.0",
+  "generated_at": "2026-05-27T13:31:31.621540",
+  "generation_duration_seconds": 0.66,
+  "seed": 42,
+  "process_name": "Restaurant Permit Application",
+  "num_cases": 1000,
+  "num_events": 7347,
+  "start_date": "2024-01-01",
+  "end_date": "2024-06-30",
+  "timezone": "America/New_York",
+  "columns": [
+    {
+      "name": "case:concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "concept:name",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "time:timestamp",
+      "type": "datetime",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "org:resource",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "lifecycle:transition",
+      "type": "string",
+      "scope": "event_mandatory"
+    },
+    {
+      "name": "case:priority",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "case:applicant_type",
+      "type": "string",
+      "scope": "case_custom"
+    },
+    {
+      "name": "cost:amount",
+      "type": "float",
+      "scope": "event_custom"
+    }
+  ],
+  "statistics": {
+    "mean_cycle_time_hours": 501.04,
+    "median_cycle_time_hours": 386.71,
+    "min_cycle_time_hours": 53.53,
+    "max_cycle_time_hours": 1991.0,
+    "std_cycle_time_hours": 278.9,
+    "mean_events_per_case": 7.35
+  },
+  "activity_distribution": {
+    "review_in_progress": 1449,
+    "submitted": 1000,
+    "intake_validation": 1000,
+    "assigned_to_reviewer": 956,
+    "health_inspection": 884,
+    "approved": 777,
+    "request_additional_info": 565,
+    "applicant_provided_info": 493,
+    "rejected": 151,
+    "withdrawn": 72
+  },
+  "resource_utilization": {
+    "reviewer_002": 479,
+    "clerk_002": 415,
+    "reviewer_004": 405,
+    "inspector_002": 325,
+    "clerk_001": 318,
+    "inspector_001": 298,
+    "reviewer_001": 288,
+    "reviewer_003": 277,
+    "clerk_003": 267,
+    "inspector_003": 261
+  },
+  "git_commit": "560197c",
+  "cli_command": "tools/processlog/src/processlog/__main__.py generate -c data/input/process_config.yaml -n 1000 -f all -o data/input/runs/n1000-realistic",
+  "config_file": "data/input/process_config.yaml"
+}

@@ -1,0 +1,58 @@
+name: Release
+
+# Phase 39 Group H — publishes the package from a trusted, tagged CI build so
+# npm PROVENANCE can be minted (a local `npm publish` cannot). Triggered by a
+# human pushing a `v*` tag after the CI workflow is green on that commit, or
+# manually via workflow_dispatch. The actual publish is never run by hand.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# id-token: write lets npm mint provenance via OIDC (and is what npm "trusted
+# publishing" exchanges for a short-lived token). contents: read to checkout.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    name: build, gate, publish (provenance)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # OIDC trusted publishing + provenance need npm >= 11.5.1 — newer than the
+      # npm bundled with Node 22. Upgrade the npm used for the publish step.
+      - name: Upgrade npm (for OIDC trusted publishing)
+        run: npm install -g npm@latest
+
+      - name: Build + release gate
+        run: pnpm build && pnpm lint && pnpm typecheck && pnpm coverage
+
+      # Publishes per package.json "files". Provenance is minted from this
+      # trusted CI run via the id-token above. With npm "trusted publishing"
+      # configured for the package on npmjs.com, NO token is needed. Otherwise
+      # add an NPM_TOKEN repo secret and uncomment the env block.
+      - name: Publish to npm (public, with provenance)
+        run: npm publish --provenance --access public
+        # No token: publishes via npm Trusted Publishing (OIDC), authorized by the
+        # id-token above. One-time setup at npmjs.com -> mining-lib -> Settings ->
+        # Trusted Publisher -> GitHub Actions (repo crlsrmrlsz/mining-lib,
+        # workflow release.yml). Lets 2FA stay on with no token/OTP in CI.

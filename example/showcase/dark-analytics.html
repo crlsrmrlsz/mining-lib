@@ -1,0 +1,236 @@
+<!doctype html>
+<!--
+  Showcase host: dark-analytics. A Linear-flavoured dark dashboard
+  with KPI tiles + one big diagram tile. preset="linear" pairs the
+  diagram's design language with the host's. The host imposes a
+  deep-black background and an opinionated dark color system; the
+  embed must blend in without manual var overrides.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stride · Analytics</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --host-bg: #0a0b0f;
+        --host-tile: #14151c;
+        --host-tile-hover: #181a23;
+        --host-border: #23242c;
+        --host-ink: #e8e8ee;
+        --host-muted: #8b8d97;
+        --host-accent: #6366f1;
+        --host-pos: #34d399;
+        --host-neg: #f87171;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--host-bg);
+        color: var(--host-ink);
+        font-family:
+          "Inter", "SF Pro Text", -apple-system, system-ui, sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        font-feature-settings: "ss01", "cv11";
+      }
+      header.app {
+        padding: 14px 24px;
+        border-bottom: 1px solid var(--host-border);
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      header.app .brand {
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: -0.01em;
+      }
+      header.app nav {
+        display: flex;
+        gap: 18px;
+        color: var(--host-muted);
+        font-size: 12px;
+      }
+      header.app nav .active {
+        color: var(--host-ink);
+      }
+      header.app .right {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--host-muted);
+      }
+      main {
+        padding: 24px;
+      }
+      .page-title {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+      }
+      .page-sub {
+        color: var(--host-muted);
+        font-size: 12px;
+        margin-bottom: 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .tile {
+        background: var(--host-tile);
+        border: 1px solid var(--host-border);
+        border-radius: 10px;
+        padding: 18px;
+      }
+      .tile.kpi {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 110px;
+      }
+      .tile.kpi .label {
+        font-size: 11px;
+        color: var(--host-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .tile.kpi .value {
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .tile.kpi .delta {
+        font-size: 12px;
+      }
+      .tile.kpi .delta.up {
+        color: var(--host-pos);
+      }
+      .tile.kpi .delta.down {
+        color: var(--host-neg);
+      }
+      .tile.diagram {
+        grid-column: 1 / -1;
+        padding: 14px;
+        height: 880px;
+        display: flex;
+        flex-direction: column;
+      }
+      .tile.diagram h3 {
+        font-size: 13px;
+        font-weight: 500;
+        padding: 4px 6px 12px;
+        color: var(--host-muted);
+      }
+      .tile.diagram .frame {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+      }
+      .tile.diagram mining-lib-diagram {
+        flex: 0 1 720px;
+        min-width: 0;
+      }
+      .demo-footer {
+        margin-top: 22px;
+        padding: 14px 18px;
+        background: var(--host-tile);
+        border: 1px solid var(--host-border);
+        border-radius: 10px;
+        color: var(--host-muted);
+        font-size: 12px;
+      }
+      .demo-footer strong {
+        color: var(--host-ink);
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app">
+      <span class="brand">▲ Stride</span>
+      <nav>
+        <span>Issues</span>
+        <span>Projects</span>
+        <span class="active">Analytics</span>
+        <span>Roadmap</span>
+      </nav>
+      <span class="right">Q2 · last 30d</span>
+    </header>
+    <main>
+      <div class="page-title">Loan origination pipeline</div>
+      <div class="page-sub">2 500 cases · loan-origination</div>
+      <div class="grid">
+        <div class="tile kpi">
+          <span class="label">Throughput</span>
+          <span class="value">2 500</span>
+          <span class="delta up">▲ 8.4 % vs prior</span>
+        </div>
+        <div class="tile kpi">
+          <span class="label">Avg cycle time</span>
+          <span class="value">26 d</span>
+          <span class="delta down">▼ 1.6 d vs prior</span>
+        </div>
+        <div class="tile kpi">
+          <span class="label">Re-underwrite rate</span>
+          <span class="value">16 %</span>
+          <span class="delta up">▲ 0.8 pp vs prior</span>
+        </div>
+        <div class="tile kpi">
+          <span class="label">P95 duration</span>
+          <span class="value">52 d</span>
+          <span class="delta up">▲ 4 d vs prior</span>
+        </div>
+        <div class="tile diagram">
+          <h3>Process map</h3>
+          <div class="frame">
+            <mining-lib-diagram
+              id="diagram"
+              preset="linear"
+              theme="dark"
+              controls="all"
+              rankdir="TB"
+            ></mining-lib-diagram>
+          </div>
+        </div>
+      </div>
+      <p class="demo-footer">
+        <strong>About this demo.</strong> Linear-flavoured dark dashboard.
+        The diagram uses <code>preset="linear"</code> and
+        <code>theme="dark"</code>; no manual CSS variable overrides on the
+        embed. The host's deep-black background and indigo accent system
+        are stylistically aligned with the linear preset's defaults.
+        <br /><br />
+        <em>Curated state:</em> Mean-time mode is active so the
+        re-underwriting loop reads amber and terminal nodes carry
+        average case durations.
+      </p>
+    </main>
+    <script type="module">
+      import { buildDfg, parseCsv } from "mining-lib";
+
+      const response = await fetch("/runs/loan-origination/events.csv");
+      const text = await response.text();
+      const { log } = parseCsv(text);
+      const dfg = buildDfg(log);
+      const el = document.getElementById("diagram");
+      el.log = log;
+      el.dfg = dfg;
+      // Phase 36 curation: open in Mean (time) so the re-underwriting
+      // loop reads amber against the linear preset's dark palette.
+      el.handle.setCountMode("meanDuration");
+      window.__diagram = el.handle;
+      window.__el = el;
+    </script>
+  </body>
+</html>

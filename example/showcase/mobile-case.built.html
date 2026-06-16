@@ -1,0 +1,166 @@
+<!doctype html>
+<!--
+  Showcase host: mobile-case. A narrow column at max-width 320 px,
+  centered on a neutral background, simulating the embed inside a
+  mobile-width viewport. Default preset. The page is meant to be
+  visited at viewport widths around 360–414 px (real phones) where
+  the column == the screen, but it also makes sense on a desktop
+  to see how a 320 px embed reads.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loan portal · Case</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --host-bg: #eef0f4;
+        --host-surface: #ffffff;
+        --host-ink: #15161c;
+        --host-muted: #65687a;
+        --host-rule: #dde1e8;
+        --host-accent: #0f766e;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--host-bg);
+        color: var(--host-ink);
+        font-family:
+          "Inter", -apple-system, system-ui, "Segoe UI", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        display: flex;
+        justify-content: center;
+        padding: 16px 0;
+      }
+      .phone-column {
+        width: 100%;
+        max-width: 320px;
+        background: var(--host-surface);
+        border: 1px solid var(--host-rule);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 92vh;
+      }
+      .phone-column header {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--host-rule);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .phone-column header .back {
+        font-size: 18px;
+        color: var(--host-muted);
+      }
+      .phone-column header .title {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .phone-column header .badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: var(--host-accent);
+        color: white;
+        letter-spacing: 0.04em;
+      }
+      .case-meta {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--host-rule);
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 12px;
+        font-size: 12px;
+      }
+      .case-meta dt {
+        color: var(--host-muted);
+      }
+      .case-meta dd {
+        color: var(--host-ink);
+      }
+      .embed-frame {
+        flex: 1 1 auto;
+        min-height: 320px;
+        display: flex;
+      }
+      .embed-frame mining-lib-diagram {
+        flex: 1 1 auto;
+      }
+      .demo-footer {
+        padding: 12px 14px;
+        border-top: 1px solid var(--host-rule);
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--host-muted);
+      }
+      .demo-footer strong {
+        color: var(--host-ink);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone-column">
+      <header>
+        <span class="back">‹</span>
+        <span class="title">case_0001</span>
+        <span class="badge">320 px</span>
+      </header>
+      <dl class="case-meta">
+        <dt>Variant</dt>
+        <dd>Direct Funding</dd>
+        <dt>Amount band</dt>
+        <dd>over_750k</dd>
+        <dt>Status</dt>
+        <dd>Funded</dd>
+      </dl>
+      <div class="embed-frame">
+        <mining-lib-diagram id="diagram" controls="all"></mining-lib-diagram>
+      </div>
+      <p class="demo-footer">
+        <strong>About this demo.</strong> Mobile case-detail host. The
+        diagram lives inside a 320-px-wide column; Phase 13's
+        responsive fit-to-view keeps the whole graph visible without
+        horizontal overflow on the host. Default preset, tiny pill
+        density.
+        <br /><br />
+        <em>Curated state:</em> an <code>over_750k</code>
+        loan-amount-band filter is active; the chip is visible inside
+        the Filters popover.
+      </p>
+    </main>
+    <script src="/mining-lib.umd.js"></script>
+    <script>
+      (async () => {
+        const response = await fetch("/runs/loan-origination/events.csv");
+        const text = await response.text();
+        const { log } = MiningLib.parseCsv(text);
+        const dfg = MiningLib.buildDfg(log);
+        const el = document.getElementById("diagram");
+        el.log = log;
+        el.dfg = dfg;
+        // Phase 36 curation: filter to the over_750k loan-amount band
+        // (the smallest band; ~10% of cases) so the active filter chip
+        // is visible and the narrow column shows a trimmed funnel.
+        el.handle.setFilters([
+          { kind: "attribute", attribute: "case:loan_amount_band", values: ["over_750k"] },
+        ]);
+        window.__diagram = el.handle;
+        window.__el = el;
+      })();
+    </script>
+  </body>
+</html>

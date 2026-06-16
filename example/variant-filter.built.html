@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mining-lib — variant filter (built UMD)</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        font-family: system-ui, sans-serif;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 0;
+        color: #555;
+      }
+      .hint {
+        font-size: 0.85rem;
+        color: #666;
+        margin: 0;
+      }
+      .controls {
+        font-size: 0.9rem;
+        color: #555;
+      }
+      .controls select,
+      .controls button {
+        margin-left: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.9rem;
+        border: 1px solid #ddd;
+        background: #fff;
+        color: inherit;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .controls button:hover {
+        background: #f5f5f5;
+      }
+      #mount {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+      }
+      #mount mining-lib-diagram {
+        flex: 1 1 auto;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>mining-lib · variant filter (UMD bundle)</h1>
+    <p class="hint">
+      Tick / untick variants in the panel to filter the diagram. URL
+      params: <code>?fixture=n5-fixture</code> (default) or
+      <code>?fixture=n1000-realistic</code>; <code>?topK=N</code> sets
+      how many variants are pre-selected.
+    </p>
+    <div class="controls">
+      <label for="count-mode">Count mode:</label>
+      <select id="count-mode">
+        <option value="absolute">Absolute frequency</option>
+        <option value="case">Case frequency</option>
+        <option value="maxRepetitions">Max repetitions</option>
+        <option value="meanRepetitions">Mean repetitions</option>
+      </select>
+      <button type="button" id="dark-toggle">Toggle dark mode</button>
+    </div>
+    <div id="mount"></div>
+    <script src="/mining-lib.umd.js"></script>
+    <script>
+      (async () => {
+        const params = new URLSearchParams(location.search);
+        const parsedTopK = Number(params.get("topK"));
+        const config =
+          Number.isInteger(parsedTopK) && parsedTopK >= 1
+            ? { variantTopK: parsedTopK }
+            : {};
+
+        const handle = MiningLib.createDiagram("#mount", config);
+        window.__diagram = handle;
+        window.__el = document.querySelector("#mount > mining-lib-diagram");
+
+        const fixture = params.get("fixture") ?? "n5-fixture";
+        const response = await fetch(`/runs/${fixture}/events.csv`);
+        const text = await response.text();
+        const { log } = MiningLib.parseCsv(text);
+        const dfg = MiningLib.buildDfg(log);
+        handle.render(dfg, log);
+
+        document.getElementById("count-mode").addEventListener("change", (event) => {
+          handle.setCountMode(event.target.value);
+        });
+
+        document.getElementById("dark-toggle").addEventListener("click", () => {
+          const t = handle.getTheme();
+          handle.setTheme({ dark: !t.dark });
+          document.body.style.background = t.dark ? "" : "#000";
+          document.body.style.color = t.dark ? "" : "#fafafa";
+        });
+      })();
+    </script>
+  </body>
+</html>

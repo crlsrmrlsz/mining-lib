@@ -1,0 +1,392 @@
+<!doctype html>
+<!--
+  Showcase landing page. Five cards, each links to one host page
+  and previews it via a small live <mining-lib-diagram>. The fixture
+  is fetched and parsed once; each card calls render() with the same
+  Dfg + log under a different preset, so the page itself doubles as
+  a live demo of preset switching on identical data.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mining-lib · showcase</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #ffffff;
+        --ink: #0b0b0f;
+        --muted: #4b5563;
+        --rule: #e5e7eb;
+        --card-bg: #fafafa;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      header.intro {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 56px 32px 24px;
+      }
+      header.intro h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+      }
+      header.intro p {
+        color: var(--muted);
+        max-width: 640px;
+      }
+      :where(header.intro p, footer.note) code {
+        background: #f3f4f6;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .grid {
+        max-width: 1100px;
+        margin: 24px auto 80px;
+        padding: 0 32px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 120ms ease, transform 120ms ease;
+      }
+      .card:hover {
+        border-color: #94a3b8;
+        transform: translateY(-1px);
+      }
+      .card .preview {
+        height: 200px;
+        border-bottom: 1px solid var(--rule);
+        background: #ffffff;
+        display: flex;
+      }
+      .card.dark .preview {
+        background: #0a0b0f;
+      }
+      .card.paper .preview {
+        background: #f6efe2;
+      }
+      .card .preview mining-lib-diagram {
+        flex: 1 1 auto;
+      }
+      /*
+       * Phase 36 workaround: defensively hide chrome bars on every
+       * thumbnail via `::part()`. `controls="none"` already hides them
+       * when the bug-free attribute path is taken; the !important here
+       * defeats the shadow-DOM's own `display: flex` rule in cases the
+       * pre-existing controls/preset interaction is hit. Harmless on
+       * bug-free thumbnails (already hidden).
+       */
+      .card mining-lib-diagram::part(chrome-top),
+      .card mining-lib-diagram::part(chrome-bottom) {
+        /* biome-ignore lint/complexity/noImportantStyles: needs to defeat shadow-DOM display:flex */
+        display: none !important;
+      }
+      .card .body {
+        padding: 14px 16px 16px;
+      }
+      .card .body h2 {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        margin-bottom: 4px;
+      }
+      .card .body p {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .card .body .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .card .body .tag {
+        font-size: 11px;
+        color: var(--muted);
+        padding: 2px 8px;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: #ffffff;
+      }
+      footer.note {
+        max-width: 1100px;
+        margin: 0 auto 60px;
+        padding: 0 32px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      section.about-data {
+        max-width: 1100px;
+        margin: 0 auto 24px;
+        padding: 32px 32px 0;
+        border-top: 1px solid var(--rule);
+      }
+      /* biome-ignore lint/style/noDescendingSpecificity: scoped under section.about-data; does not collide with .card .body h2 above */
+      section.about-data h2 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 12px;
+        padding-top: 32px;
+      }
+      section.about-data p {
+        font-size: 14.5px;
+        color: var(--ink);
+        max-width: 680px;
+        margin-bottom: 12px;
+      }
+      section.about-data p:last-of-type {
+        color: var(--muted);
+      }
+      section.about-data .stat-strip {
+        margin-top: 22px;
+        padding: 16px 0;
+        border-top: 1px solid var(--rule);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+      }
+      section.about-data .stat-strip dt {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 2px;
+      }
+      section.about-data .stat-strip dd {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="intro">
+      <h1>mining-lib · showcase</h1>
+      <p>
+        Five fake host websites that drop the same
+        <code>&lt;mining-lib-diagram&gt;</code> into realistic embedder
+        contexts. Each card below previews one host and links to its
+        full page. All five share the same
+        <code>loan-origination</code> dataset (~2 500 cases through a
+        thirteen-activity funnel) — what differs is the host design,
+        the named preset, and the feature each page is pre-tuned to
+        spotlight.
+      </p>
+    </header>
+    <section class="grid" id="grid">
+      <a class="card" href="./admin-saas.html" data-preset="default" data-curate="neutral">
+        <div class="preview">
+          <mining-lib-diagram controls="none" rankdir="TB"></mining-lib-diagram>
+        </div>
+        <div class="body">
+          <h2>Admin SaaS</h2>
+          <p>Sidebar nav + breadcrumbs + a card embed.</p>
+          <div class="tags">
+            <span class="tag">default preset</span>
+            <span class="tag">neutral baseline</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="./marketing-docs.html" data-preset="default" data-curate="happy-path">
+        <div class="preview">
+          <mining-lib-diagram controls="none" rankdir="TB"></mining-lib-diagram>
+        </div>
+        <div class="body">
+          <h2>Marketing / docs</h2>
+          <p>Hero embed below a landing-page headline.</p>
+          <div class="tags">
+            <span class="tag">default preset</span>
+            <span class="tag">happy path</span>
+          </div>
+        </div>
+      </a>
+      <a
+        class="card dark"
+        href="./dark-analytics.html"
+        data-preset="linear"
+        data-dark="true"
+        data-curate="mean-time"
+      >
+        <div class="preview">
+          <mining-lib-diagram
+            preset="linear"
+            theme="dark"
+            controls="none"
+            rankdir="TB"
+          ></mining-lib-diagram>
+        </div>
+        <div class="body">
+          <h2>Dark analytics</h2>
+          <p>Linear-flavoured dashboard, KPI tiles + diagram tile.</p>
+          <div class="tags">
+            <span class="tag">linear preset</span>
+            <span class="tag">mean time · amber</span>
+          </div>
+        </div>
+      </a>
+      <a class="card paper" href="./team-wiki.html" data-preset="paper" data-curate="neutral">
+        <div class="preview">
+          <mining-lib-diagram preset="paper" controls="none" rankdir="TB"></mining-lib-diagram>
+        </div>
+        <div class="body">
+          <h2>Team wiki</h2>
+          <p>Notion-style serif page with an inline embed.</p>
+          <div class="tags">
+            <span class="tag">paper preset</span>
+            <span class="tag">case trace</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="./mobile-case.html" data-preset="default" data-curate="attribute-filter">
+        <div class="preview">
+          <mining-lib-diagram controls="none"></mining-lib-diagram>
+        </div>
+        <div class="body">
+          <h2>Mobile case detail</h2>
+          <p>320-px column simulating a phone-width embed.</p>
+          <div class="tags">
+            <span class="tag">default preset</span>
+            <span class="tag">attribute filter</span>
+          </div>
+        </div>
+      </a>
+    </section>
+    <section class="about-data">
+      <h2>About this data</h2>
+      <p>
+        The shared dataset is a loan-origination process — the journey a
+        mortgage application takes from intake to funding. Cases enter
+        at <em>Application Submitted</em>, pass through a credit check
+        and document collection, get an initial review, and then route
+        to underwriting. The clean path continues through property
+        appraisal, conditional approval, clear-to-close, and ends in
+        <em>Loan Funded</em>.
+      </p>
+      <p>
+        The interesting structure lives between Underwriting and
+        Documents Received: when underwriting needs more from the
+        applicant, the case loops back through <em>Request Additional
+        Documents → Documents Received</em> and is re-underwritten —
+        sometimes more than once. Cases that never recover end in
+        <em>Declined</em>; cases the applicant abandons end in
+        <em>Withdrawn</em>.
+      </p>
+      <p>
+        About half of cases take the happy path; the other half deviate
+        through the loop or one of the terminal outcomes. Most cycle
+        time piles up inside that loop. Switch the embed to
+        <em>Mean (time)</em> mode to see the bottleneck light up amber,
+        or pick a case in the trace panel to walk through one loan
+        end-to-end.
+      </p>
+      <dl class="stat-strip">
+        <div>
+          <dt>Cases</dt>
+          <dd>~2,500</dd>
+        </div>
+        <div>
+          <dt>Events</dt>
+          <dd>22,336</dd>
+        </div>
+        <div>
+          <dt>Activities</dt>
+          <dd>13</dd>
+        </div>
+        <div>
+          <dt>Named resources</dt>
+          <dd>10</dd>
+        </div>
+        <div>
+          <dt>Intake window</dt>
+          <dd>Jan–Jun 2025</dd>
+        </div>
+        <div>
+          <dt>Median cycle time</dt>
+          <dd>22 d</dd>
+        </div>
+      </dl>
+    </section>
+    <footer class="note">
+      Each preview hides the control bar (<code>controls="none"</code>) so
+      the cards stay quiet. Click through for the full embedded experience.
+    </footer>
+    <script src="/mining-lib.umd.js"></script>
+    <script>
+      (async () => {
+        const response = await fetch("/runs/loan-origination/events.csv");
+        const text = await response.text();
+        const { log } = MiningLib.parseCsv(text);
+        const dfg = MiningLib.buildDfg(log);
+
+        // Phase 36: each thumbnail mirrors its destination page's curated state.
+        // Trace overlay is skipped on the team-wiki thumbnail — the floating
+        // panel needs more room than the 200 px preview affords; the paper
+        // preset carries the visual signature on its own.
+        const happyPath = MiningLib.getVariants(log)[0]?.sequence ?? null;
+        let traceCaseId = null;
+        if (happyPath) {
+          for (const [id, c] of log.cases) {
+            if (
+              c.events.length === happyPath.length &&
+              c.events.every((e, i) => e.activity === happyPath[i])
+            ) {
+              traceCaseId = id;
+              break;
+            }
+          }
+        }
+
+        const cards = document.querySelectorAll("#grid .card");
+        for (const card of cards) {
+          const preview = card.querySelector("mining-lib-diagram");
+          if (!preview) continue;
+          preview.log = log;
+          preview.dfg = dfg;
+          const curate = card.dataset.curate;
+          if (curate === "happy-path" && happyPath) {
+            preview.handle.setHappyPathVariant(happyPath);
+          } else if (curate === "mean-time") {
+            preview.handle.setCountMode("meanDuration");
+          } else if (curate === "trace" && traceCaseId) {
+            preview.handle.setTraceCase(traceCaseId);
+          } else if (curate === "attribute-filter") {
+            preview.handle.setFilters([
+              { kind: "attribute", attribute: "case:loan_amount_band", values: ["over_750k"] },
+            ]);
+          }
+        }
+        window.__previews = cards;
+      })();
+    </script>
+  </body>
+</html>

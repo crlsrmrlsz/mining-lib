@@ -1,0 +1,199 @@
+<!doctype html>
+<!--
+  Showcase host: marketing-docs. A docs / marketing landing — hero
+  headline, subhead, then a wide-short embed below explanatory copy.
+  Default preset. The host imposes a strong global typography
+  reset (own font, own line-height, big top margins between sections)
+  so the embed must hold its own type rhythm.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlowKit · See your processes the way they actually run</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --host-bg: #ffffff;
+        --host-ink: #0b0b0f;
+        --host-muted: #4b5563;
+        --host-border: #e5e7eb;
+        --host-accent: #16a34a;
+      }
+      html,
+      body {
+        width: 100%;
+      }
+      body {
+        background: var(--host-bg);
+        color: var(--host-ink);
+        font-family:
+          ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      header.site {
+        border-bottom: 1px solid var(--host-border);
+        padding: 18px 32px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+      header.site .brand {
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+      header.site nav {
+        display: flex;
+        gap: 22px;
+        font-size: 14px;
+      }
+      header.site nav a {
+        color: var(--host-muted);
+        text-decoration: none;
+      }
+      header.site .cta {
+        margin-left: auto;
+        padding: 8px 14px;
+        background: var(--host-ink);
+        color: white;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+      }
+      .hero {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 80px 32px 48px;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: 52px;
+        line-height: 1.05;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin-bottom: 20px;
+      }
+      .hero h1 em {
+        font-style: normal;
+        background: linear-gradient(135deg, #16a34a, #22d3ee);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero p.lede {
+        font-size: 19px;
+        color: var(--host-muted);
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      .embed-section {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 32px 96px;
+      }
+      .embed-section .caption {
+        text-align: center;
+        font-size: 13px;
+        color: var(--host-muted);
+        margin-bottom: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .hero-embed {
+        height: 820px;
+        border: 1px solid var(--host-border);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fafafa;
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.05),
+          0 12px 32px -12px rgba(0, 0, 0, 0.08);
+      }
+      .hero-embed mining-lib-diagram {
+        display: block;
+        width: min(100%, 720px);
+        margin-inline: auto;
+        height: 100%;
+      }
+      .demo-footer {
+        max-width: 720px;
+        margin: 36px auto 0;
+        padding-top: 20px;
+        border-top: 1px solid var(--host-border);
+        color: var(--host-muted);
+        font-size: 13px;
+        line-height: 1.55;
+        text-align: center;
+      }
+      .demo-footer strong {
+        color: var(--host-ink);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site">
+      <span class="brand">⊹ FlowKit</span>
+      <nav>
+        <a href="#">Product</a>
+        <a href="#">Customers</a>
+        <a href="#">Pricing</a>
+        <a href="#">Docs</a>
+      </nav>
+      <a href="#" class="cta">Try free</a>
+    </header>
+    <section class="hero">
+      <h1>See your processes <em>the way they actually run.</em></h1>
+      <p class="lede">
+        Drop one event log into FlowKit and get a live, interactive
+        flow diagram in your dashboard. No notebooks, no servers, no
+        re-modelling.
+      </p>
+    </section>
+    <section class="embed-section">
+      <p class="caption">Live embed · loan origination</p>
+      <div class="hero-embed">
+        <mining-lib-diagram
+          id="diagram"
+          controls="all"
+          rankdir="TB"
+        ></mining-lib-diagram>
+      </div>
+      <p class="demo-footer">
+        <strong>About this demo.</strong> Marketing / docs landing host —
+        wide-short hero embed below the headline. Default preset.
+        The host enforces an aggressive universal margin reset and a
+        rounded-display font stack; the embed renders with its own
+        Inter / system stack and pill chrome regardless.
+        <br /><br />
+        <em>Curated state:</em> the Direct Funding happy-path is pinned,
+        so nodes off the dominant flow render faded.
+      </p>
+    </section>
+    <script src="/mining-lib.umd.js"></script>
+    <script>
+      (async () => {
+        const response = await fetch("/runs/loan-origination/events.csv");
+        const text = await response.text();
+        const { log } = MiningLib.parseCsv(text);
+        const dfg = MiningLib.buildDfg(log);
+        const el = document.getElementById("diagram");
+        el.log = log;
+        el.dfg = dfg;
+        // Phase 36 curation: pin Direct Funding as the happy path so
+        // non-happy-path nodes fade and the dominant flow stands out.
+        const happyPath = MiningLib.getVariants(log)[0]?.sequence ?? null;
+        if (happyPath) el.handle.setHappyPathVariant(happyPath);
+        window.__diagram = el.handle;
+        window.__el = el;
+      })();
+    </script>
+  </body>
+</html>

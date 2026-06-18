@@ -5,7 +5,7 @@ Embed an interactive process map in any web page — straight from an event log.
 
 mining-lib turns a CSV or NDJSON event log into an interactive **Directly-Follows Graph**. It runs entirely in the browser, ships as a framework-agnostic web component, and weighs ~70 kB gzipped (D3 + dagre under the hood).
 
-- **Input** — CSV or NDJSON, auto-detected. The shape is one row per event: a case id, an activity, a timestamp, and optional resource + custom attributes (full contract in [`LOG_FORMAT_SPEC`](data/input/LOG_FORMAT_SPEC.md)). Sample logs ship in [`data/input/runs/`](data/input/runs).
+- **Input** — CSV or NDJSON ( IEEE 1849-2023 XES standard) , auto-detected. The shape is one row per event: a case id, an activity, a timestamp, and optional resource + custom attributes (full contract in [`LOG_FORMAT_SPEC`](data/input/LOG_FORMAT_SPEC.md)). Sample logs ship in [`data/input/runs/`](data/input/runs).
 - **Output** — an interactive `<mining-lib-diagram>`: pan, zoom, drag nodes and edges, filter by variant / attribute / date / resource / single case, drill into any case's trace, switch count and timing modes, flip light/dark, and export to SVG or PNG.
 - **Need a log?** The companion generator **[ProcessLog](https://github.com/crlsrmrlsz/processlog)** synthesises realistic event logs in exactly this format — handy for demos, tests, and trying the library without real data.
 

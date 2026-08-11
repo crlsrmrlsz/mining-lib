@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@dagrejs/dagre':
         specifier: ^3.0.0
-        version: 3.0.0
+        version: 3.1.1
       d3-drag:
         specifier: ^3.0.0
         version: 3.0.0
@@ -233,11 +233,11 @@ packages:
     resolution: {integrity: sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA==}
     engines: {node: '>=20.19.0'}
 
-  '@dagrejs/dagre@3.0.0':
-    resolution: {integrity: sha512-ZzhnTy1rfuoew9Ez3EIw4L2znPGnYYhfn8vc9c4oB8iw6QAsszbiU0vRhlxWPFnmmNSFAkrYeF1PhM5m4lAN0Q==}
+  '@dagrejs/dagre@3.1.1':
+    resolution: {integrity: sha512-zroZB1dFOFiGgv4Xcrn1DckB1o4aOikPqD2NDQPV0WM//CXGcS6xiD0rNkqHmw6FEg4tabt4nxPLwgCWT+Vb2A==}
 
-  '@dagrejs/graphlib@4.0.1':
-    resolution: {integrity: sha512-IvcV6FduIIAmLwnH+yun+QtV36SC7mERqa86aClNqmMN09WhmPPYU8ckHrZBozErf+UvHPWOTJYaGYiIcs0DgA==}
+  '@dagrejs/graphlib@4.0.5':
+    resolution: {integrity: sha512-7xrBTqIts3o+PMUZX97wSc+7TUbW+/rULzGNCTP6yooNVDXbzw4Wutg/H/xOutTB/c/k0YqOAavgPh4/Zk9PFA==}
 
   '@emnapi/core@1.9.2':
     resolution: {integrity: sha512-UC+ZhH3XtczQYfOlu3lNEkdW/p4dsJ1r/bP7H8+rhao3TTTMO1ATq/4DdIi23XuGoFY+Cz0JmCbdVl0hz9jZcA==}
@@ -1398,11 +1398,11 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.0': {}
 
-  '@dagrejs/dagre@3.0.0':
+  '@dagrejs/dagre@3.1.1':
     dependencies:
-      '@dagrejs/graphlib': 4.0.1
+      '@dagrejs/graphlib': 4.0.5
 
-  '@dagrejs/graphlib@4.0.1': {}
+  '@dagrejs/graphlib@4.0.5': {}
 
   '@emnapi/core@1.9.2':
     dependencies:
